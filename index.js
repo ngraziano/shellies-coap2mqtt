@@ -1,6 +1,10 @@
 const shellies = require("shellies");
 const MQTT = require("async-mqtt");
+const mqttWildcard = require("mqtt-wildcard");
 const commandLineArgs = require("command-line-args");
+
+const payload_available = "online";
+const payload_not_available = "offline";
 
 /**
  * @type { commandLineArgs.OptionDefinition[] }
@@ -9,7 +13,9 @@ const optionDefinitions = [
   { name: "verbose", alias: "v", type: Boolean },
   { name: "mqtturl", type: String, multiple: false, defaultOption: true },
   { name: "mqttprefix", type: String, defaultValue: "shellies" },
-  { name: "homeassistantprefix", type: String, defaultValue: "homeassistant" }
+  { name: "homeassistantprefix", type: String, defaultValue: "homeassistant" },
+  { name: "shelly_login", type: String, defaultValue: null },
+  { name: "shelly_password", type: String, defaultValue: null }
 ];
 
 const args = commandLineArgs(optionDefinitions);
@@ -24,6 +30,13 @@ function getHomeAssistantDevice(device) {
     model: device.type,
     name: device.id
   };
+}
+/**
+ *
+ * @param {{id:string, type:string}} device
+ */
+function getDeviceTopicPrefix(device) {
+  return `${args.mqttprefix}/${device.type}/${device.id}`;
 }
 
 /**
@@ -44,7 +57,10 @@ async function addToHomeAssistantDiscover(client, device) {
           prefix + "sensor" + id + "config",
           JSON.stringify({
             name: "SH-" + device.id + "-power",
-            state_topic: `${args.mqttprefix}/${device.id}/powerMeter0`,
+            state_topic: `${getDeviceTopicPrefix(device)}/powerMeter0`,
+            availability_topic: `${getDeviceTopicPrefix(device)}/state`,
+            payload_available,
+            payload_not_available,
             unit_of_measurement: "W",
             device: getHomeAssistantDevice(device),
             device_class: "power",
@@ -60,8 +76,11 @@ async function addToHomeAssistantDiscover(client, device) {
           JSON.stringify({
             name: "SH-" + device.id + "-state",
             unique_id: "SH-" + device.id + "-state",
-            state_topic: `${args.mqttprefix}/${device.id}/relay0`,
-            command_topic: `${args.mqttprefix}/${device.id}/relay0/SET`,
+            state_topic: `${getDeviceTopicPrefix(device)}/relay0`,
+            command_topic: `${getDeviceTopicPrefix(device)}/relay0/SET`,
+            availability_topic: `${getDeviceTopicPrefix(device)}/state`,
+            payload_available,
+            payload_not_available,
             state_on: "true",
             state_off: "false",
             device: getHomeAssistantDevice(device)
@@ -82,6 +101,37 @@ async function addToHomeAssistantDiscover(client, device) {
   }
 }
 
+/**
+ *
+ * @param {string[]} topics
+ * @param {Buffer} payload
+ */
+async function handleSet([deviceType, deviceID, prop], payload) {
+  const device = shellies.getDevice(deviceType, deviceID);
+  if (device) {
+    if (prop === "relay0") {
+      const val = payload.toString();
+      try {
+        await device.setRelay(0, val === "ON");
+      } catch (error) {
+        console.error("Fail to set relay", error);
+      }
+    }
+  }
+}
+
+/**
+ *
+ * @param {string} topic
+ * @param {Buffer} payload
+ */
+function handleMqttMessage(topic, payload) {
+  const setTopics = mqttWildcard(topic, `${args.mqttprefix}/+/+/+/SET`);
+  if (setTopics) {
+    handleSet(setTopics, payload);
+  }
+}
+
 async function start() {
   const client = await MQTT.connectAsync(
     args.mqtturl,
@@ -89,6 +139,9 @@ async function start() {
     true
   );
   console.log("MQTT connected ?", client.connected);
+
+  client.on("message", handleMqttMessage);
+  client.subscribe(`${args.mqttprefix}/+/+/+/SET`, { qos: 2 });
 
   shellies.on("discover", device => {
     // a new device has been discovered
@@ -99,14 +152,7 @@ async function start() {
       device.type
     );
     client
-      .publish(`${args.mqttprefix}/${device.id}/state`, "online", {
-        qos: 0,
-        retain: true
-      })
-      .catch(error => console.error("Error during publish", error));
-
-    client
-      .publish(`${args.mqttprefix}/${device.id}/type`, device.type, {
+      .publish(`${getDeviceTopicPrefix(device)}/state`, payload_available, {
         qos: 0,
         retain: true
       })
@@ -119,7 +165,7 @@ async function start() {
       console.log(device.id, prop, "changed from", oldValue, "to", newValue);
       client
         .publish(
-          `${args.mqttprefix}/${device.id}/${prop}`,
+          `${getDeviceTopicPrefix(device)}/${prop}`,
           JSON.stringify(newValue),
           {
             qos: 0,
@@ -133,13 +179,18 @@ async function start() {
       // the device went offline
       console.log("Device with ID", device.id, "went offline");
       client
-        .publish(`${args.mqttprefix}/${device.id}/state`, "offline", {
+        .publish(`${getDeviceTopicPrefix(device)}/state`, payload_available, {
           qos: 0,
           retain: true
         })
         .catch(error => console.error("Error during publish", error));
     });
   });
+
+  if (args.shelly_login && args.shelly_password) {
+    shellies.setAuthCredentials(args.shelly_login, args.shelly_password);
+  }
+
   // start discovering devices and listening for status updates
   await shellies.start();
   console.log("Start listening shellies");
