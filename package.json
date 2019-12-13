@@ -13,7 +13,7 @@
     "async-mqtt": "^2.4.2",
     "command-line-args": "^5.1.1",
     "mqtt-wildcard": "^3.0.9",
-    "shellies": "^0.14.1"
+    "shellies": "^0.15.0"
   },
   "devDependencies": {
     "eslint": "^6.7.2"
