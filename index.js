@@ -3,8 +3,9 @@ const MQTT = require("async-mqtt");
 const mqttWildcard = require("mqtt-wildcard");
 const commandLineArgs = require("command-line-args");
 
+const { addToHomeAssistantDiscover } = require("./home-assistant-discover");
+
 const payload_available = "online";
-const payload_not_available = "offline";
 
 /**
  * @type { commandLineArgs.OptionDefinition[] }
@@ -19,86 +20,13 @@ const optionDefinitions = [
 ];
 
 const args = commandLineArgs(optionDefinitions);
-/**
- *
- * @param {{id:string, type:string}} device
- */
-function getHomeAssistantDevice(device) {
-  return {
-    identifiers: ["shelly", device.id],
-    manufacturer: "Shelly",
-    model: device.type,
-    name: device.id
-  };
-}
+
 /**
  *
  * @param {{id:string, type:string}} device
  */
 function getDeviceTopicPrefix(device) {
   return `${args.mqttprefix}/${device.type}/${device.id}`;
-}
-
-/**
- *
- * @param {import("async-mqtt").AsyncMqttClient} client
- * @param {{id:string, type:string}} device
- */
-async function addToHomeAssistantDiscover(client, device) {
-  if (!args.homeassistantprefix) {
-    return;
-  }
-  try {
-    const prefix = `${args.homeassistantprefix}/`;
-    const id = `/shellies/${device.id}/`;
-    switch (device.type) {
-      case "SHPLG-S":
-        await client.publish(
-          prefix + "sensor" + id + "config",
-          JSON.stringify({
-            name: "SH-" + device.id + "-power",
-            state_topic: `${getDeviceTopicPrefix(device)}/powerMeter0`,
-            availability_topic: `${getDeviceTopicPrefix(device)}/state`,
-            payload_available,
-            payload_not_available,
-            unit_of_measurement: "W",
-            device: getHomeAssistantDevice(device),
-            device_class: "power",
-            unique_id: "SH-" + device.id + "-power"
-          }),
-          {
-            retain: true,
-            qos: 0
-          }
-        );
-        await client.publish(
-          prefix + "switch" + id + "config",
-          JSON.stringify({
-            name: "SH-" + device.id + "-state",
-            unique_id: "SH-" + device.id + "-state",
-            state_topic: `${getDeviceTopicPrefix(device)}/relay0`,
-            command_topic: `${getDeviceTopicPrefix(device)}/relay0/SET`,
-            availability_topic: `${getDeviceTopicPrefix(device)}/state`,
-            payload_available,
-            payload_not_available,
-            state_on: "true",
-            state_off: "false",
-            device: getHomeAssistantDevice(device)
-          }),
-          {
-            retain: true,
-            qos: 0
-          }
-        );
-        //
-        break;
-
-      default:
-        break;
-    }
-  } catch (error) {
-    console.error("Erreur during publish of auto discovery", error);
-  }
 }
 
 /**
@@ -158,7 +86,12 @@ async function start() {
       })
       .catch(error => console.error("Error during publish", error));
 
-    addToHomeAssistantDiscover(client, device);
+    addToHomeAssistantDiscover(
+      client,
+      device,
+      args.homeassistantprefix,
+      getDeviceTopicPrefix(device)
+    );
 
     device.on("change", (prop, newValue, oldValue) => {
       // a property on the device has changed
