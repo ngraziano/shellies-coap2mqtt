@@ -32,16 +32,15 @@ async function addToHomeAssistantDiscover(
   }
   try {
     const prefix = `${homeassistantprefix}/`;
-    const id = `/shellies/${device.id}/`;
     switch (device.type) {
       case "SHPLG-S":
-        await addSensor0(client, prefix, id, device, deviceprefix);
-        await addRelay0(client, prefix, id, device, deviceprefix);
-        await addInternalTemp(client, prefix, id, device, deviceprefix);
+        await addSensor0(client, prefix, device, deviceprefix);
+        await addRelay0(client, prefix, device, deviceprefix);
+        await addInternalTemp(client, prefix, device, deviceprefix);
         break;
       case "SHPLG2-1":
-        await addSensor0(client, prefix, id, device, deviceprefix);
-        await addRelay0(client, prefix, id, device, deviceprefix);
+        await addSensor0(client, prefix, device, deviceprefix);
+        await addRelay0(client, prefix, device, deviceprefix);
         break;
       default:
         break;
@@ -51,9 +50,9 @@ async function addToHomeAssistantDiscover(
   }
 }
 
-async function addRelay0(client, prefix, id, device, deviceprefix) {
+async function addRelay0(client, prefix, device, deviceprefix) {
   await client.publish(
-    prefix + "switch" + id + "config",
+    prefix + `switch/shellies/${device.id}-state/config`,
     JSON.stringify({
       name: "SH-" + device.id + "-state",
       unique_id: "SH-" + device.id + "-state",
@@ -75,7 +74,7 @@ async function addRelay0(client, prefix, id, device, deviceprefix) {
 
 async function addSensor0(client, prefix, id, device, deviceprefix) {
   await client.publish(
-    prefix + "sensor" + id + "config",
+    prefix + `sensor/shellies/${device.id}-power/config`,
     JSON.stringify({
       name: "SH-" + device.id + "-power",
       state_topic: `${deviceprefix}/powerMeter0`,
@@ -96,7 +95,7 @@ async function addSensor0(client, prefix, id, device, deviceprefix) {
 
 async function addInternalTemp(client, prefix, id, device, deviceprefix) {
   await client.publish(
-    prefix + "sensor" + id + "config",
+    prefix + `sensor/shellies/${device.id}-internalTemperature/config`,
     JSON.stringify({
       name: "SH-" + device.id + "-internalTemperature",
       state_topic: `${deviceprefix}/internalTemperature`,
