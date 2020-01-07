@@ -7,7 +7,7 @@ const payload_not_available = "offline";
  */
 function getHomeAssistantDevice(device) {
   return {
-    identifiers: ["shelly", device.id],
+    identifiers: [`shelly-${device.id}`],
     manufacturer: "Shelly",
     model: device.type,
     name: device.id
@@ -72,7 +72,7 @@ async function addRelay0(client, prefix, device, deviceprefix) {
   );
 }
 
-async function addSensor0(client, prefix, id, device, deviceprefix) {
+async function addSensor0(client, prefix, device, deviceprefix) {
   await client.publish(
     prefix + `sensor/shellies/${device.id}-power/config`,
     JSON.stringify({
@@ -93,7 +93,7 @@ async function addSensor0(client, prefix, id, device, deviceprefix) {
   );
 }
 
-async function addInternalTemp(client, prefix, id, device, deviceprefix) {
+async function addInternalTemp(client, prefix, device, deviceprefix) {
   await client.publish(
     prefix + `sensor/shellies/${device.id}-internalTemperature/config`,
     JSON.stringify({
