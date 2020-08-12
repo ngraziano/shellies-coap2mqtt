@@ -10,16 +10,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "async-mqtt": "^2.4.2",
+    "async-mqtt": "^2.6.1",
     "command-line-args": "^5.1.1",
     "mqtt-wildcard": "^3.0.9",
-    "shellies": "^0.15.0"
+    "shellies": "^0.20.1"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/ngraziano/shellies-coap2mqtt"
   },
   "devDependencies": {
-    "eslint": "^6.7.2"
+    "eslint": "^7.6.0"
   }
 }
