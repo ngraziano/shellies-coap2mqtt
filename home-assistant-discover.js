@@ -10,7 +10,7 @@ function getHomeAssistantDevice(device) {
     identifiers: [`shelly-${device.id}`],
     manufacturer: "Shelly",
     model: device.type,
-    name: device.id
+    name: device.id,
   };
 }
 
@@ -37,6 +37,7 @@ async function addToHomeAssistantDiscover(
         await addSensor0(client, prefix, device, deviceprefix);
         await addRelay0(client, prefix, device, deviceprefix);
         await addInternalTemp(client, prefix, device, deviceprefix);
+        await addOverheated(client, prefix, device, deviceprefix);
         break;
       case "SHPLG2-1":
         await addSensor0(client, prefix, device, deviceprefix);
@@ -63,11 +64,11 @@ async function addRelay0(client, prefix, device, deviceprefix) {
       payload_not_available,
       state_on: "true",
       state_off: "false",
-      device: getHomeAssistantDevice(device)
+      device: getHomeAssistantDevice(device),
     }),
     {
       retain: true,
-      qos: 0
+      qos: 0,
     }
   );
 }
@@ -84,11 +85,11 @@ async function addSensor0(client, prefix, device, deviceprefix) {
       unit_of_measurement: "W",
       device: getHomeAssistantDevice(device),
       device_class: "power",
-      unique_id: "SH-" + device.id + "-power"
+      unique_id: "SH-" + device.id + "-power",
     }),
     {
       retain: true,
-      qos: 0
+      qos: 0,
     }
   );
 }
@@ -105,14 +106,37 @@ async function addInternalTemp(client, prefix, device, deviceprefix) {
       unit_of_measurement: "°C",
       device: getHomeAssistantDevice(device),
       device_class: "temperature",
-      unique_id: "SH-" + device.id + "-internalTemperature"
+      unique_id: "SH-" + device.id + "-internalTemperature",
     }),
     {
       retain: true,
-      qos: 0
+      qos: 0,
     }
   );
 }
+
+async function addOverheated(client, prefix, device, deviceprefix) {
+  await client.publish(
+    prefix + `binary_sensor/shellies/${device.id}-overheated/config`,
+    JSON.stringify({
+      name: "SH-" + device.id + "-overheated",
+      state_topic: `${deviceprefix}/overheated`,
+      availability_topic: `${deviceprefix}/state`,
+      payload_available,
+      payload_not_available,
+      state_on: "true",
+      state_off: "false",
+      device: getHomeAssistantDevice(device),
+      device_class: "safety",
+      unique_id: "SH-" + device.id + "-overheated",
+    }),
+    {
+      retain: true,
+      qos: 0,
+    }
+  );
+}
+
 module.exports = {
-  addToHomeAssistantDiscover
+  addToHomeAssistantDiscover,
 };
