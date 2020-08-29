@@ -13,13 +13,13 @@
     "async-mqtt": "^2.6.1",
     "command-line-args": "^5.1.1",
     "mqtt-wildcard": "^3.0.9",
-    "shellies": "^0.20.1"
+    "shellies": "^1.0.1"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/ngraziano/shellies-coap2mqtt"
   },
   "devDependencies": {
-    "eslint": "^7.6.0"
+    "eslint": "^7.7.0"
   }
 }
