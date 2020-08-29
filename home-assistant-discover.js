@@ -124,10 +124,10 @@ async function addOverheated(client, prefix, device, deviceprefix) {
       availability_topic: `${deviceprefix}/state`,
       payload_available,
       payload_not_available,
-      state_on: "true",
-      state_off: "false",
+      payload_on: "true",
+      payload_off: "false",
       device: getHomeAssistantDevice(device),
-      device_class: "safety",
+      device_class: "heat",
       unique_id: "SH-" + device.id + "-overheated",
     }),
     {
