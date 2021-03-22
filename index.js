@@ -129,6 +129,40 @@ async function start() {
   console.log("Start listening shellies");
 }
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Remove old configuration
+ */
+async function cleanup() {
+  const client = await MQTT.connectAsync(
+    args.mqtturl,
+    { connectTimeout: 10000 },
+    true
+  );
+  console.log("MQTT connected ?", client.connected);
+
+  client.on("message", (topic, payload) => {
+    if (payload && payload.byteLength > 0) {
+      client.publish(topic, "", {
+        retain: true,
+        qos: 0,
+      });
+    }
+  });
+  await client.subscribe(`${args.homeassistantprefix}/+/shellies/+/config`, {
+    qos: 0,
+  });
+
+  await delay(5000);
+}
+
+cleanup().catch((error) => {
+  console.error("Cleanup error :", error);
+});
+
 start().catch((error) => {
   console.error("Fatal error :", error);
 });
