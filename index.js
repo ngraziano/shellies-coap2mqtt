@@ -161,10 +161,12 @@ async function cleanup() {
   await client.end();
 }
 
-cleanup().catch((error) => {
-  console.error("Cleanup error :", error);
-});
-
-start().catch((error) => {
-  console.error("Fatal error :", error);
-});
+cleanup()
+  .catch((error) => {
+    console.error("Cleanup error :", error);
+  })
+  .then(() => {
+    start().catch((error) => {
+      console.error("Fatal error :", error);
+    });
+  });
