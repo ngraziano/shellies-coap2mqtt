@@ -20,6 +20,6 @@
     "url": "https://github.com/ngraziano/shellies-coap2mqtt"
   },
   "devDependencies": {
-    "eslint": "^7.11.0"
+    "eslint": "^7.22.0"
   }
 }
