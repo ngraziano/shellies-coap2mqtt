@@ -157,6 +157,8 @@ async function cleanup() {
   });
 
   await delay(5000);
+
+  await client.end();
 }
 
 cleanup().catch((error) => {
