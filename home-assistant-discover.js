@@ -33,6 +33,25 @@ async function addToHomeAssistantDiscover(
   try {
     const prefix = `${homeassistantprefix}/`;
     switch (device.type) {
+      case "SHSW-1":
+        await addRelay0(client, prefix, device, deviceprefix);
+        break;
+      case "SHSW-L":
+        await addPower0(client, prefix, device, deviceprefix);
+        await addEnergyCounter0(client, prefix, device, deviceprefix);
+        await addRelay0(client, prefix, device, deviceprefix);
+        await addInternalTemp(client, prefix, device, deviceprefix);
+        await addOverheated(client, prefix, device, deviceprefix);
+        break;
+      case "SHSW-PM":
+        await addPower0(client, prefix, device, deviceprefix);
+        await addEnergyCounter0(client, prefix, device, deviceprefix);
+        await addRelay0(client, prefix, device, deviceprefix);
+        await addInternalTemp(client, prefix, device, deviceprefix);
+        await addOverheated(client, prefix, device, deviceprefix);
+        await addoverPower(client, prefix, device, deviceprefix);
+        await addoverPowerValue(client, prefix, device, deviceprefix);
+        break;
       case "SHPLG-S":
         await addPower0(client, prefix, device, deviceprefix);
         await addEnergyCounter0(client, prefix, device, deviceprefix);
@@ -42,6 +61,7 @@ async function addToHomeAssistantDiscover(
         await addoverPower(client, prefix, device, deviceprefix);
         await addoverPowerValue(client, prefix, device, deviceprefix);
         break;
+      case "SHPLG-1":
       case "SHPLG2-1":
         await addPower0(client, prefix, device, deviceprefix);
         await addEnergyCounter0(client, prefix, device, deviceprefix);
