@@ -61,8 +61,8 @@ async function addRelay0(client, prefix, device, deviceprefix) {
   await client.publish(
     prefix + `switch/shellies/${device.id}-state/config`,
     JSON.stringify({
-      name: "SH-" + device.id + "-state",
-      unique_id: "SH-" + device.id + "-state",
+      name: `SH-${device.id}-state`,
+      unique_id: `SH-${device.id}-state`,
       state_topic: `${deviceprefix}/relay0`,
       command_topic: `${deviceprefix}/relay0/SET`,
       availability_topic: `${deviceprefix}/state`,
@@ -83,7 +83,7 @@ async function addPower0(client, prefix, device, deviceprefix) {
   await client.publish(
     prefix + `sensor/shellies/${device.id}-power/config`,
     JSON.stringify({
-      name: "SH-" + device.id + "-power",
+      name: `SH-${device.id}-power`,
       state_topic: `${deviceprefix}/power0`,
       availability_topic: `${deviceprefix}/state`,
       payload_available,
@@ -91,7 +91,7 @@ async function addPower0(client, prefix, device, deviceprefix) {
       unit_of_measurement: "W",
       device: getHomeAssistantDevice(device),
       device_class: "power",
-      unique_id: "SH-" + device.id + "-power",
+      unique_id: `SH-${device.id}-power`,
     }),
     {
       retain: true,
@@ -104,7 +104,7 @@ async function addEnergyCounter0(client, prefix, device, deviceprefix) {
   await client.publish(
     prefix + `sensor/shellies/${device.id}-energy/config`,
     JSON.stringify({
-      name: "SH-" + device.id + "-energy",
+      name: `SH-${device.id}-energy`,
       state_topic: `${deviceprefix}/energyCounter0`,
       availability_topic: `${deviceprefix}/state`,
       payload_available,
@@ -112,7 +112,7 @@ async function addEnergyCounter0(client, prefix, device, deviceprefix) {
       unit_of_measurement: "Wmin",
       device: getHomeAssistantDevice(device),
       device_class: "power",
-      unique_id: "SH-" + device.id + "-energy",
+      unique_id: `SH-${device.id}-energy`,
     }),
     {
       retain: true,
@@ -125,7 +125,7 @@ async function addoverPowerValue(client, prefix, device, deviceprefix) {
   await client.publish(
     prefix + `sensor/shellies/${device.id}-overpowervalue/config`,
     JSON.stringify({
-      name: "SH-" + device.id + "-overpowervalue",
+      name: `SH-${device.id}-overpowervalue`,
       state_topic: `${deviceprefix}/overPowerValue`,
       availability_topic: `${deviceprefix}/state`,
       payload_available,
@@ -133,7 +133,7 @@ async function addoverPowerValue(client, prefix, device, deviceprefix) {
       unit_of_measurement: "W",
       device: getHomeAssistantDevice(device),
       device_class: "power",
-      unique_id: "SH-" + device.id + "-overpowervalue",
+      unique_id: `SH-${device.id}-overpowervalue`,
     }),
     {
       retain: true,
@@ -146,7 +146,7 @@ async function addInternalTemp(client, prefix, device, deviceprefix) {
   await client.publish(
     prefix + `sensor/shellies/${device.id}-deviceTemperature/config`,
     JSON.stringify({
-      name: "SH-" + device.id + "-deviceTemperature",
+      name: `SH-${device.id}-deviceTemperature`,
       state_topic: `${deviceprefix}/deviceTemperature`,
       availability_topic: `${deviceprefix}/state`,
       payload_available,
@@ -154,7 +154,7 @@ async function addInternalTemp(client, prefix, device, deviceprefix) {
       unit_of_measurement: "°C",
       device: getHomeAssistantDevice(device),
       device_class: "temperature",
-      unique_id: "SH-" + device.id + "-deviceTemperature",
+      unique_id: `SH-${device.id}-deviceTemperature`,
     }),
     {
       retain: true,
@@ -167,7 +167,7 @@ async function addOverheated(client, prefix, device, deviceprefix) {
   await client.publish(
     prefix + `binary_sensor/shellies/${device.id}-overTemperature/config`,
     JSON.stringify({
-      name: "SH-" + device.id + "-overTemperature",
+      name: `SH-${device.id}-overTemperature`,
       state_topic: `${deviceprefix}/overTemperature`,
       availability_topic: `${deviceprefix}/state`,
       payload_available,
@@ -176,7 +176,7 @@ async function addOverheated(client, prefix, device, deviceprefix) {
       payload_off: "false",
       device: getHomeAssistantDevice(device),
       device_class: "heat",
-      unique_id: "SH-" + device.id + "-overTemperature",
+      unique_id: `SH-${device.id}-overTemperature`,
     }),
     {
       retain: true,
@@ -189,7 +189,7 @@ async function addoverPower(client, prefix, device, deviceprefix) {
   await client.publish(
     prefix + `binary_sensor/shellies/${device.id}-overPower/config`,
     JSON.stringify({
-      name: "SH-" + device.id + "-overPower",
+      name: `SH-${device.id}-overPower`,
       state_topic: `${deviceprefix}/overPower`,
       availability_topic: `${deviceprefix}/state`,
       payload_available,
@@ -198,7 +198,7 @@ async function addoverPower(client, prefix, device, deviceprefix) {
       payload_off: "false",
       device: getHomeAssistantDevice(device),
       device_class: "heat",
-      unique_id: "SH-" + device.id + "-overPower",
+      unique_id: `SH-${device.id}-overPower`,
     }),
     {
       retain: true,

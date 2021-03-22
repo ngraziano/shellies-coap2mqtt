@@ -16,7 +16,7 @@ const optionDefinitions = [
   { name: "mqttprefix", type: String, defaultValue: "shellies" },
   { name: "homeassistantprefix", type: String, defaultValue: "homeassistant" },
   { name: "shelly_login", type: String, defaultValue: null },
-  { name: "shelly_password", type: String, defaultValue: null }
+  { name: "shelly_password", type: String, defaultValue: null },
 ];
 
 const args = commandLineArgs(optionDefinitions);
@@ -71,7 +71,7 @@ async function start() {
   client.on("message", handleMqttMessage);
   client.subscribe(`${args.mqttprefix}/+/+/+/SET`, { qos: 2 });
 
-  shellies.on("discover", device => {
+  shellies.on("discover", (device) => {
     // a new device has been discovered
     console.log(
       "Discovered device with ID",
@@ -82,9 +82,9 @@ async function start() {
     client
       .publish(`${getDeviceTopicPrefix(device)}/state`, payload_available, {
         qos: 0,
-        retain: true
+        retain: true,
       })
-      .catch(error => console.error("Error during publish", error));
+      .catch((error) => console.error("Error during publish", error));
 
     addToHomeAssistantDiscover(
       client,
@@ -102,10 +102,10 @@ async function start() {
           JSON.stringify(newValue),
           {
             qos: 0,
-            retain: true
+            retain: true,
           }
         )
-        .catch(error => console.error("Error during publish", error));
+        .catch((error) => console.error("Error during publish", error));
     });
 
     device.on("offline", () => {
@@ -114,9 +114,9 @@ async function start() {
       client
         .publish(`${getDeviceTopicPrefix(device)}/state`, payload_available, {
           qos: 0,
-          retain: true
+          retain: true,
         })
-        .catch(error => console.error("Error during publish", error));
+        .catch((error) => console.error("Error during publish", error));
     });
   });
 
@@ -129,6 +129,6 @@ async function start() {
   console.log("Start listening shellies");
 }
 
-start().catch(error => {
+start().catch((error) => {
   console.error("Fatal error :", error);
 });
