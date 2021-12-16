@@ -181,14 +181,12 @@ async function cleanup() {
   await client.end();
 }
 
-if (args.cleanup) {
-  cleanup()
-    .catch((error) => {
-      console.error("Cleanup error :", error);
-    })
-    .then(() => {
-      start().catch((error) => {
-        console.error("Fatal error :", error);
-      });
+(args.cleanup ? cleanup() : Promise.resolve())
+  .catch((error) => {
+    console.error("Cleanup error :", error);
+  })
+  .then(() => {
+    start().catch((error) => {
+      console.error("Fatal error :", error);
     });
-}
+  });
