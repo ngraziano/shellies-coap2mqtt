@@ -131,8 +131,28 @@ async function addEnergyCounter0(client, prefix, device, deviceprefix) {
       payload_not_available,
       unit_of_measurement: "Wmin",
       device: getHomeAssistantDevice(device),
-      device_class: "power",
+      device_class: "energy",
       unique_id: `SH-${device.id}-energy`,
+    }),
+    {
+      retain: true,
+      qos: 0,
+    }
+  );
+
+  // energie in Wh
+  await client.publish(
+    prefix + `sensor/shellies/${device.id}-energy-wh/config`,
+    JSON.stringify({
+      name: `SH-${device.id}-energy-wh`,
+      state_topic: `${deviceprefix}/energyCounter0-wh`,
+      availability_topic: `${deviceprefix}/state`,
+      payload_available,
+      payload_not_available,
+      unit_of_measurement: "Wh",
+      device: getHomeAssistantDevice(device),
+      device_class: "energy",
+      unique_id: `SH-${device.id}-energy-wh`,
     }),
     {
       retain: true,
