@@ -132,6 +132,7 @@ async function addEnergyCounter0(client, prefix, device, deviceprefix) {
       unit_of_measurement: "Wmin",
       device: getHomeAssistantDevice(device),
       device_class: "energy",
+      state_class: "total_increasing",
       unique_id: `SH-${device.id}-energy`,
     }),
     {
@@ -152,6 +153,7 @@ async function addEnergyCounter0(client, prefix, device, deviceprefix) {
       unit_of_measurement: "Wh",
       device: getHomeAssistantDevice(device),
       device_class: "energy",
+      state_class: "total_increasing",
       unique_id: `SH-${device.id}-energy-wh`,
     }),
     {
