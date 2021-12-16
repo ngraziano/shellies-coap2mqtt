@@ -12,6 +12,7 @@ const payload_available = "online";
  */
 const optionDefinitions = [
   { name: "verbose", alias: "v", type: Boolean },
+  { name: "cleanup", type: Boolean, defaultValue: false },
   { name: "mqtturl", type: String, multiple: false, defaultOption: true },
   { name: "mqttprefix", type: String, defaultValue: "shellies" },
   { name: "homeassistantprefix", type: String, defaultValue: "homeassistant" },
@@ -93,20 +94,39 @@ async function start() {
       getDeviceTopicPrefix(device)
     );
 
-    device.on("change", (prop, newValue, oldValue) => {
-      // a property on the device has changed
-      console.log(device.id, prop, "changed from", oldValue, "to", newValue);
-      client
-        .publish(
-          `${getDeviceTopicPrefix(device)}/${prop}`,
-          JSON.stringify(newValue),
-          {
-            qos: 0,
-            retain: true,
-          }
-        )
-        .catch((error) => console.error("Error during publish", error));
-    });
+    device.on(
+      "change",
+      /**
+       * @param {string} prop
+       */
+      (prop, newValue, oldValue) => {
+        // a property on the device has changed
+        console.log(device.id, prop, "changed from", oldValue, "to", newValue);
+        client
+          .publish(
+            `${getDeviceTopicPrefix(device)}/${prop}`,
+            JSON.stringify(newValue),
+            {
+              qos: 0,
+              retain: true,
+            }
+          )
+          .catch((error) => console.error("Error during publish", error));
+        // special case for energy counter to convert from Wmin to Wh
+        if (prop.startsWith("energyCounter")) {
+          client
+            .publish(
+              `${getDeviceTopicPrefix(device)}/${prop}-wh`,
+              JSON.stringify(newValue / 60),
+              {
+                qos: 0,
+                retain: true,
+              }
+            )
+            .catch((error) => console.error("Error during publish", error));
+        }
+      }
+    );
 
     device.on("offline", () => {
       // the device went offline
@@ -161,12 +181,14 @@ async function cleanup() {
   await client.end();
 }
 
-cleanup()
-  .catch((error) => {
-    console.error("Cleanup error :", error);
-  })
-  .then(() => {
-    start().catch((error) => {
-      console.error("Fatal error :", error);
+if (args.cleanup) {
+  cleanup()
+    .catch((error) => {
+      console.error("Cleanup error :", error);
+    })
+    .then(() => {
+      start().catch((error) => {
+        console.error("Fatal error :", error);
+      });
     });
-  });
+}
