@@ -1,6 +1,9 @@
 const payload_available = "online";
 const payload_not_available = "offline";
 
+const payload_on = "true";
+const payload_off = "false";
+
 /**
  *
  * @param {{id:string, type:string}} device
@@ -68,6 +71,13 @@ async function addToHomeAssistantDiscover(
         await addRelay0(client, prefix, device, deviceprefix);
         await addoverPower(client, prefix, device, deviceprefix);
         await addoverPowerValue(client, prefix, device, deviceprefix);
+        break;
+      case "SHTRV-01":
+        await addTemperature(client, prefix, device, deviceprefix);
+        await addTargetTemperature(client, prefix, device, deviceprefix);
+        await addBattery(client, prefix, device, deviceprefix);
+        await addMode(client, prefix, device, deviceprefix);
+        await addValvePosition(client, prefix, device, deviceprefix);
         break;
       default:
         break;
@@ -164,61 +174,132 @@ async function addEnergyCounter0(client, prefix, device, deviceprefix) {
 }
 
 async function addoverPowerValue(client, prefix, device, deviceprefix) {
-  await client.publish(
-    prefix + `sensor/shellies/${device.id}-overpowervalue/config`,
-    JSON.stringify({
-      name: `SH-${device.id}-overpowervalue`,
-      state_topic: `${deviceprefix}/overPowerValue`,
-      availability_topic: `${deviceprefix}/state`,
-      payload_available,
-      payload_not_available,
-      unit_of_measurement: "W",
-      device: getHomeAssistantDevice(device),
-      device_class: "power",
-      unique_id: `SH-${device.id}-overpowervalue`,
-    }),
-    {
-      retain: true,
-      qos: 0,
-    }
+  await addCaractheristic(
+    client,
+    prefix,
+    device,
+    deviceprefix,
+    "overpowervalue",
+    "W",
+    "power"
   );
 }
 
 async function addInternalTemp(client, prefix, device, deviceprefix) {
-  await client.publish(
-    prefix + `sensor/shellies/${device.id}-deviceTemperature/config`,
-    JSON.stringify({
-      name: `SH-${device.id}-deviceTemperature`,
-      state_topic: `${deviceprefix}/deviceTemperature`,
-      availability_topic: `${deviceprefix}/state`,
-      payload_available,
-      payload_not_available,
-      unit_of_measurement: "°C",
-      device: getHomeAssistantDevice(device),
-      device_class: "temperature",
-      unique_id: `SH-${device.id}-deviceTemperature`,
-    }),
-    {
-      retain: true,
-      qos: 0,
-    }
+  await addCaractheristic(
+    client,
+    prefix,
+    device,
+    deviceprefix,
+    "deviceTemperature",
+    "°C",
+    "temperature"
+  );
+}
+
+async function addTemperature(client, prefix, device, deviceprefix) {
+  await addCaractheristic(
+    client,
+    prefix,
+    device,
+    deviceprefix,
+    "temperature",
+    "°C",
+    "temperature"
+  );
+}
+
+async function addTargetTemperature(client, prefix, device, deviceprefix) {
+  await addCaractheristic(
+    client,
+    prefix,
+    device,
+    deviceprefix,
+    "targetTemperature",
+    "°C",
+    "temperature"
+  );
+}
+
+async function addBattery(client, prefix, device, deviceprefix) {
+  await addCaractheristic(
+    client,
+    prefix,
+    device,
+    deviceprefix,
+    "battery",
+    "%",
+    "battery"
+  );
+}
+
+async function addMode(client, prefix, device, deviceprefix) {
+  await addCaractheristic(
+    client,
+    prefix,
+    device,
+    deviceprefix,
+    "mode",
+    undefined,
+    undefined
+  );
+}
+
+async function addValvePosition(client, prefix, device, deviceprefix) {
+  await addCaractheristic(
+    client,
+    prefix,
+    device,
+    deviceprefix,
+    "valvePosition",
+    "%",
+    undefined
   );
 }
 
 async function addOverheated(client, prefix, device, deviceprefix) {
+  await addBinaryCaractheristic(
+    client,
+    prefix,
+    device,
+    deviceprefix,
+    "overTemperature",
+    "heat"
+  );
+}
+
+async function addoverPower(client, prefix, device, deviceprefix) {
+  await addBinaryCaractheristic(
+    client,
+    prefix,
+    device,
+    deviceprefix,
+    "overPower",
+    "power"
+  );
+}
+
+async function addBinaryCaractheristic(
+  client,
+  prefix,
+  device,
+  deviceprefix,
+  characteristic,
+  deviceClass
+) {
   await client.publish(
-    prefix + `binary_sensor/shellies/${device.id}-overTemperature/config`,
+    prefix + `binary_sensor/shellies/${device.id}-${characteristic}/config`,
     JSON.stringify({
-      name: `SH-${device.id}-overTemperature`,
-      state_topic: `${deviceprefix}/overTemperature`,
+      name: `SH-${device.id}-${characteristic}`,
+      state_topic: `${deviceprefix}/${characteristic}`,
       availability_topic: `${deviceprefix}/state`,
       payload_available,
       payload_not_available,
-      payload_on: "true",
-      payload_off: "false",
+      payload_on,
+      payload_off,
       device: getHomeAssistantDevice(device),
-      device_class: "heat",
-      unique_id: `SH-${device.id}-overTemperature`,
+      device_class: deviceClass,
+      unique_id: `SH-${device.id}-${characteristic}`,
     }),
     {
       retain: true,
@@ -227,20 +308,27 @@ async function addOverheated(client, prefix, device, deviceprefix) {
   );
 }
 
-async function addoverPower(client, prefix, device, deviceprefix) {
+async function addCaractheristic(
+  client,
+  prefix,
+  device,
+  deviceprefix,
+  characteristic,
+  unit,
+  deviceClass
+) {
   await client.publish(
-    prefix + `binary_sensor/shellies/${device.id}-overPower/config`,
+    prefix + `sensor/shellies/${device.id}-${characteristic}/config`,
     JSON.stringify({
-      name: `SH-${device.id}-overPower`,
-      state_topic: `${deviceprefix}/overPower`,
+      name: `SH-${device.id}-${characteristic}`,
+      state_topic: `${deviceprefix}/${characteristic}`,
       availability_topic: `${deviceprefix}/state`,
       payload_available,
       payload_not_available,
-      payload_on: "true",
-      payload_off: "false",
+      unit_of_measurement: unit,
       device: getHomeAssistantDevice(device),
-      device_class: "heat",
-      unique_id: `SH-${device.id}-overPower`,
+      device_class: deviceClass,
+      unique_id: `SH-${device.id}-${characteristic}`,
     }),
     {
       retain: true,
