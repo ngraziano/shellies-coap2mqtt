@@ -38,6 +38,7 @@ async function addToHomeAssistantDiscover(
     switch (device.type) {
       case "SHSW-1":
         await addRelay0(client, prefix, device, deviceprefix);
+        await addInput0(client, prefix, device, deviceprefix);
         break;
       case "SHSW-L":
         await addPower0(client, prefix, device, deviceprefix);
@@ -100,6 +101,27 @@ async function addRelay0(client, prefix, device, deviceprefix) {
       payload_not_available,
       state_on: "true",
       state_off: "false",
+      device: getHomeAssistantDevice(device),
+    }),
+    {
+      retain: true,
+      qos: 0,
+    }
+  );
+}
+
+async function addInput0(client, prefix, device, deviceprefix) {
+  await client.publish(
+    prefix + `binary_sensor/shellies/${device.id}-input/config`,
+    JSON.stringify({
+      name: `SH-${device.id}-input`,
+      unique_id: `SH-${device.id}-input`,
+      state_topic: `${deviceprefix}/input0`,
+      availability_topic: `${deviceprefix}/state`,
+      payload_available,
+      payload_not_available,
+      state_on: "1",
+      state_off: "0",
       device: getHomeAssistantDevice(device),
     }),
     {
