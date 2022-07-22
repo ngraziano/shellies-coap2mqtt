@@ -120,8 +120,8 @@ async function addInput0(client, prefix, device, deviceprefix) {
       availability_topic: `${deviceprefix}/state`,
       payload_available,
       payload_not_available,
-      state_on: "1",
-      state_off: "0",
+      payload_on: "1",
+      payload_off: "0",
       device: getHomeAssistantDevice(device),
     }),
     {
