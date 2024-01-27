@@ -6,6 +6,7 @@ const commandLineArgs = require("command-line-args");
 const { addToHomeAssistantDiscover } = require("./home-assistant-discover");
 
 const payload_available = "online";
+const payload_unavailable = "offline";
 
 /**
  * @type { commandLineArgs.OptionDefinition[] }
@@ -132,7 +133,7 @@ async function start() {
       // the device went offline
       console.log("Device with ID", device.id, "went offline");
       client
-        .publish(`${getDeviceTopicPrefix(device)}/state`, payload_available, {
+        .publish(`${getDeviceTopicPrefix(device)}/state`, payload_unavailable, {
           qos: 0,
           retain: true,
         })
