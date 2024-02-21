@@ -1,9 +1,8 @@
-const shellies = require("shellies");
-const MQTT = require("async-mqtt");
-const mqttWildcard = require("mqtt-wildcard");
-const commandLineArgs = require("command-line-args");
-
-const { addToHomeAssistantDiscover } = require("./home-assistant-discover");
+import shellies from "shellies";
+import mqttWildcard from "mqtt-wildcard";
+import commandLineArgs from "command-line-args";
+import { connectAsync } from "mqtt";
+import { addToHomeAssistantDiscover } from "./home-assistant-discover.mjs";
 
 const payload_available = "online";
 const payload_unavailable = "offline";
@@ -63,15 +62,13 @@ function handleMqttMessage(topic, payload) {
 }
 
 async function start() {
-  const client = await MQTT.connectAsync(
-    args.mqtturl,
-    { connectTimeout: 10000 },
-    true
-  );
+  const client = await connectAsync(args.mqtturl, {
+    connectTimeout: 10000,
+  });
   console.log("MQTT connected ?", client.connected);
 
   client.on("message", handleMqttMessage);
-  client.subscribe(`${args.mqttprefix}/+/+/+/SET`, { qos: 2 });
+  await client.subscribeAsync(`${args.mqttprefix}/+/+/+/SET`, { qos: 2 });
 
   shellies.on("discover", (device) => {
     // a new device has been discovered
@@ -82,10 +79,14 @@ async function start() {
       device.type
     );
     client
-      .publish(`${getDeviceTopicPrefix(device)}/state`, payload_available, {
-        qos: 0,
-        retain: true,
-      })
+      .publishAsync(
+        `${getDeviceTopicPrefix(device)}/state`,
+        payload_available,
+        {
+          qos: 0,
+          retain: true,
+        }
+      )
       .catch((error) => console.error("Error during publish", error));
 
     addToHomeAssistantDiscover(
@@ -93,6 +94,8 @@ async function start() {
       device,
       args.homeassistantprefix,
       getDeviceTopicPrefix(device)
+    ).catch((error) =>
+      console.error("Error during home assistant auto discovery", error)
     );
 
     device.on(
@@ -104,7 +107,7 @@ async function start() {
         // a property on the device has changed
         console.log(device.id, prop, "changed from", oldValue, "to", newValue);
         client
-          .publish(
+          .publishAsync(
             `${getDeviceTopicPrefix(device)}/${prop}`,
             JSON.stringify(newValue),
             {
@@ -116,7 +119,7 @@ async function start() {
         // special case for energy counter to convert from Wmin to Wh
         if (prop.startsWith("energyCounter")) {
           client
-            .publish(
+            .publishAsync(
               `${getDeviceTopicPrefix(device)}/${prop}-wh`,
               JSON.stringify(newValue / 60),
               {
@@ -133,10 +136,14 @@ async function start() {
       // the device went offline
       console.log("Device with ID", device.id, "went offline");
       client
-        .publish(`${getDeviceTopicPrefix(device)}/state`, payload_unavailable, {
-          qos: 0,
-          retain: true,
-        })
+        .publishAsync(
+          `${getDeviceTopicPrefix(device)}/state`,
+          payload_unavailable,
+          {
+            qos: 0,
+            retain: true,
+          }
+        )
         .catch((error) => console.error("Error during publish", error));
     });
   });
@@ -158,11 +165,9 @@ function delay(ms) {
  * Remove old configuration
  */
 async function cleanup() {
-  const client = await MQTT.connectAsync(
-    args.mqtturl,
-    { connectTimeout: 10000 },
-    true
-  );
+  const client = await connectAsync(args.mqtturl, {
+    connectTimeout: 10000,
+  });
   console.log("MQTT connected ?", client.connected);
 
   client.on("message", (topic, payload) => {
@@ -173,13 +178,16 @@ async function cleanup() {
       });
     }
   });
-  await client.subscribe(`${args.homeassistantprefix}/+/shellies/+/config`, {
-    qos: 0,
-  });
+  await client.subscribeAsync(
+    `${args.homeassistantprefix}/+/shellies/+/config`,
+    {
+      qos: 0,
+    }
+  );
 
   await delay(5000);
 
-  await client.end();
+  await client.endAsync();
 }
 
 (args.cleanup ? cleanup() : Promise.resolve())
