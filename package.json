@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "command-line-args": "^5.2.1",
-    "mqtt": "^5.3.5",
+    "mqtt": "^5.5.0",
     "mqtt-wildcard": "^3.0.9",
     "shellies": "^1.7.0"
   },
