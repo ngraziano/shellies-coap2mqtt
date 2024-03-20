@@ -132,6 +132,21 @@ async function start() {
       }
     );
 
+    device.on("online", () => {
+      // the device went online
+      console.log("Device with ID", device.id, "went online");
+      client
+        .publishAsync(
+          `${getDeviceTopicPrefix(device)}/state`,
+          payload_available,
+          {
+            qos: 0,
+            retain: true,
+          }
+        )
+        .catch((error) => console.error("Error during publish", error));
+    });
+
     device.on("offline", () => {
       // the device went offline
       console.log("Device with ID", device.id, "went offline");
