@@ -56,7 +56,7 @@ async function addGatewayToHomeAssistantDiscover(
   try {
     const prefix = `${homeassistantprefix}/`;
     client.publish(
-      prefix + `binary_sensor/shellies/gatewaystate`,
+      prefix + `binary_sensor/shellies/gatewaystate/config`,
       JSON.stringify({
         name: `shellies-coap2mqtt-state`,
         unique_id: `shellies-coap2mqtt-state`,
