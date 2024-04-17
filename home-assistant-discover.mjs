@@ -65,6 +65,7 @@ async function addGatewayToHomeAssistantDiscover(
         payload_off: payload_not_available,
         device: {
           identifiers: [gatewayid],
+          name: "Shellies CoAP2MQTT",
           manufacturer: "NGraziano",
           model: "CoAP2MQTT",
         },
