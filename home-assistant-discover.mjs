@@ -6,6 +6,8 @@ const payload_not_available = "offline";
 const payload_on = "true";
 const payload_off = "false";
 
+const gatewayid = "shellies-coap2mqtt";
+
 /**
  *
  * @param {{id:string, type:string, host: string}} device device
@@ -21,6 +23,7 @@ function getHomeAssistantDevice(device, mac) {
     name: device.id,
     connections: [["mac", macFormated]],
     configuration_url: `http://${device.host}/`,
+    via_device: gatewayid,
   };
 }
 
@@ -39,6 +42,41 @@ async function getDeviceMac(device) {
     .timeout(10000);
   console.log("Mac query result", res.body.mac);
   return res.body.mac;
+}
+
+async function addGatewayToHomeAssistantDiscover(
+  client,
+  homeassistantprefix,
+  deviceprefix
+) {
+  if (!homeassistantprefix) {
+    return;
+  }
+
+  try {
+    const prefix = `${homeassistantprefix}/`;
+    client.publish(
+      prefix + `binary_sensor/shellies/gatewaystate`,
+      JSON.stringify({
+        name: `shellies-coap2mqtt-state`,
+        unique_id: `shellies-coap2mqtt-state`,
+        state_topic: `${deviceprefix}/gatewaystate`,
+        payload_on: payload_available,
+        payload_off: payload_not_available,
+        device: {
+          identifiers: [gatewayid],
+          manufacturer: "NGraziano",
+          model: "CoAP2MQTT",
+        },
+      }),
+      {
+        retain: true,
+        qos: 0,
+      }
+    );
+  } catch (error) {
+    console.error("Erreur during publish of auto discovery", error);
+  }
 }
 
 /**
@@ -507,4 +545,4 @@ function addCaractheristic(
   );
 }
 
-export { addToHomeAssistantDiscover };
+export { addToHomeAssistantDiscover, addGatewayToHomeAssistantDiscover };

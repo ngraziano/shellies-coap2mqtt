@@ -2,7 +2,10 @@ import shellies from "shellies";
 import mqttWildcard from "mqtt-wildcard";
 import commandLineArgs from "command-line-args";
 import { connectAsync } from "mqtt";
-import { addToHomeAssistantDiscover } from "./home-assistant-discover.mjs";
+import {
+  addGatewayToHomeAssistantDiscover,
+  addToHomeAssistantDiscover,
+} from "./home-assistant-discover.mjs";
 
 const payload_available = "online";
 const payload_unavailable = "offline";
@@ -64,7 +67,37 @@ function handleMqttMessage(topic, payload) {
 async function start() {
   const client = await connectAsync(args.mqtturl, {
     connectTimeout: 10000,
+    will: {
+      topic: `${args.mqttprefix}/gatewaystate`,
+      payload: payload_unavailable,
+      qos: 0,
+      retain: true,
+    },
   });
+
+  client.on("reconnect", () => {
+    console.log("Reconnecting to MQTT");
+    client.publish(`${args.mqttprefix}/gatewaystate`, payload_available, {
+      qos: 0,
+      retain: true,
+    });
+  });
+
+  await client.publishAsync(
+    `${args.mqttprefix}/gatewaystate`,
+    payload_available,
+    {
+      qos: 0,
+      retain: true,
+    }
+  );
+
+  await addGatewayToHomeAssistantDiscover(
+    client,
+    args.homeassistantprefix,
+    args.mqttprefix
+  );
+
   console.log("MQTT connected ?", client.connected);
 
   client.on("message", handleMqttMessage);
