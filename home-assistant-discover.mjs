@@ -230,6 +230,7 @@ function addPower0(client, prefix, device, deviceprefix, mac) {
       unit_of_measurement: "W",
       device: getHomeAssistantDevice(device, mac),
       device_class: "power",
+      state_class: "measurement",
       unique_id: `SH-${device.id}-power`,
     }),
     {
