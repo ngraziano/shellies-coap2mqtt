@@ -136,19 +136,64 @@ async function start() {
       /**
        * @param {string} prop
        */
-      (prop, newValue, oldValue) => {
+      (prop, newValue, oldValue, device) => {
         // a property on the device has changed
         console.log(device.id, prop, "changed from", oldValue, "to", newValue);
-        client
-          .publishAsync(
-            `${getDeviceTopicPrefix(device)}/${prop}`,
-            JSON.stringify(newValue),
-            {
-              qos: 0,
-              retain: true,
+
+
+        publishValue = (val) => {
+          client
+            .publishAsync(
+              `${getDeviceTopicPrefix(device)}/${prop}`,
+              JSON.stringify(val),
+              {
+                qos: 0,
+                retain: true,
+              }
+            )
+            .catch((error) => console.error("Error during publish", error));
+        };
+
+        if (prop === "deviceTemperature") {
+          // add a filter to reduce the number of messages sent to MQTT for deviceTemperature
+          if (device._lastDeviceTemperatureStat === undefined) {
+            device._lastDeviceTemperatureStat = {
+              lastValueSent: newValue,
+              lastMean: newValue,
+              lastValueTime: Date.now(),
+              lastMeanDuration: 0,
+            };
+            publishValue(newValue);
+          } else {
+            const stat = device._lastDeviceTemperatureStat;
+            const now = Date.now();
+            const timeSinceLastValue = now - stat.lastValueTime;
+            const newMean = (stat.lastMean * stat.lastMeanDuration + newValue * timeSinceLastValue) / (stat.lastMeanDuration + timeSinceLastValue);
+            stat.lastMean = newMean;
+            stat.lastMeanDuration += timeSinceLastValue;
+            stat.lastValueTime = now;
+
+            if (lastMeanDuration >= 60000) {
+              // if the mean duration is greater than 60 seconds, send the mean value to MQTT
+              publishValue(newMean);
+              stat.lastMeanDuration = 0;
+              stat.lastValueSent = newMean;
+            } else if (Math.abs(newValue - stat.lastValueSent) >= 5) {
+              // if the new value differs from the last sent value by 5 degrees or more, send the new value to MQTT
+              publishValue(newValue);
+              stat.lastMeanDuration = 0;
+              stat.lastValueSent = newValue;
+            } else if (Math.abs(stat.lastValueSent - stat.lastMean) >= 1) {
+              // if the mean value differs from the last sent value by 1 degree or more, send the mean value to MQTT
+              publishValue(stat.lastMean);
+              stat.lastMeanDuration = 0;
+              stat.lastValueSent = stat.lastMean;
             }
-          )
-          .catch((error) => console.error("Error during publish", error));
+
+          }
+        } else {
+          publishValue(newValue);
+        }
         // special case for energy counter to convert from Wmin to Wh
         if (prop.startsWith("energyCounter")) {
           client
