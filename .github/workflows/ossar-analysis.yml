@@ -6,6 +6,10 @@ name: OSSAR
 on:
   push:
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   OSSAR-Scan:
     # OSSAR runs on windows-latest.
