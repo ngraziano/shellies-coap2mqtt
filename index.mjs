@@ -171,7 +171,7 @@ async function start() {
           // ignore non-numeric values
           if (typeof newValue !== 'number' || isNaN(newValue)) { return; }
 
-          const statKey = `_last${prop.charAt(0).toUpperCase() + prop.slice(1)}Stat`;
+          const statKey = `_${prop}LastStat`;
           if (device[statKey] === undefined) {
             device[statKey] = {
               lastValueSent: newValue,
