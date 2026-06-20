@@ -140,7 +140,6 @@ async function start() {
         // a property on the device has changed
         console.log(device.id, prop, "changed from", oldValue, "to", newValue);
 
-
         const publishValue = (val) => {
           client
             .publishAsync(
@@ -154,12 +153,27 @@ async function start() {
             .catch((error) => console.error("Error during publish", error));
         };
 
-        if (prop === "deviceTemperature") {
+        const filterConfig = {
+          deviceTemperature: {
+            durationThreshold: 60000,
+            valueDiffThreshold: 5,
+            meanDiffThreshold: 1,
+          },
+          power0: {
+            durationThreshold: 20000,
+            valueDiffThreshold: 50,
+            meanDiffThreshold: 10,
+          }
+        };
+
+        const config = filterConfig[prop];
+        if (config) {
           // ignore non-numeric values
           if (typeof newValue !== 'number' || isNaN(newValue)) { return; }
-          // add a filter to reduce the number of messages sent to MQTT for deviceTemperature
-          if (device._lastDeviceTemperatureStat === undefined) {
-            device._lastDeviceTemperatureStat = {
+
+          const statKey = `_last${prop.charAt(0).toUpperCase() + prop.slice(1)}Stat`;
+          if (device[statKey] === undefined) {
+            device[statKey] = {
               lastValueSent: newValue,
               lastMean: newValue,
               lastValueTime: Date.now(),
@@ -167,7 +181,7 @@ async function start() {
             };
             publishValue(newValue);
           } else {
-            const stat = device._lastDeviceTemperatureStat;
+            const stat = device[statKey];
             const now = Date.now();
             const timeSinceLastValue = now - stat.lastValueTime || 1; // avoid division by zero
             const newMean = (stat.lastMean * stat.lastMeanDuration + newValue * timeSinceLastValue) / (stat.lastMeanDuration + timeSinceLastValue);
@@ -175,23 +189,22 @@ async function start() {
             stat.lastMeanDuration += timeSinceLastValue;
             stat.lastValueTime = now;
 
-            if (stat.lastMeanDuration >= 60000) {
-              // if the mean duration is greater than 60 seconds, send the mean value to MQTT
+            if (stat.lastMeanDuration >= config.durationThreshold) {
+              // if the mean duration is greater than threshold, send the mean value to MQTT
               publishValue(newMean);
               stat.lastMeanDuration = 0;
               stat.lastValueSent = newMean;
-            } else if (Math.abs(newValue - stat.lastValueSent) >= 5) {
-              // if the new value differs from the last sent value by 5 degrees or more, send the new value to MQTT
+            } else if (Math.abs(newValue - stat.lastValueSent) >= config.valueDiffThreshold) {
+              // if the new value differs from the last sent value by threshold or more, send the new value to MQTT
               publishValue(newValue);
               stat.lastMeanDuration = 0;
               stat.lastValueSent = newValue;
-            } else if (Math.abs(stat.lastValueSent - stat.lastMean) >= 1) {
-              // if the mean value differs from the last sent value by 1 degree or more, send the mean value to MQTT
+            } else if (Math.abs(stat.lastValueSent - stat.lastMean) >= config.meanDiffThreshold) {
+              // if the mean value differs from the last sent value by threshold or more, send the mean value to MQTT
               publishValue(stat.lastMean);
               stat.lastMeanDuration = 0;
               stat.lastValueSent = stat.lastMean;
             }
-
           }
         } else {
           publishValue(newValue);
