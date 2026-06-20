@@ -141,7 +141,7 @@ async function start() {
         console.log(device.id, prop, "changed from", oldValue, "to", newValue);
 
 
-        publishValue = (val) => {
+        const publishValue = (val) => {
           client
             .publishAsync(
               `${getDeviceTopicPrefix(device)}/${prop}`,
@@ -155,6 +155,8 @@ async function start() {
         };
 
         if (prop === "deviceTemperature") {
+          // ignore non-numeric values
+          if (typeof newValue !== 'number' || isNaN(newValue)) { return; }
           // add a filter to reduce the number of messages sent to MQTT for deviceTemperature
           if (device._lastDeviceTemperatureStat === undefined) {
             device._lastDeviceTemperatureStat = {
