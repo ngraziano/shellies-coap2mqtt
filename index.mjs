@@ -167,13 +167,13 @@ async function start() {
           } else {
             const stat = device._lastDeviceTemperatureStat;
             const now = Date.now();
-            const timeSinceLastValue = now - stat.lastValueTime;
+            const timeSinceLastValue = now - stat.lastValueTime || 1; // avoid division by zero
             const newMean = (stat.lastMean * stat.lastMeanDuration + newValue * timeSinceLastValue) / (stat.lastMeanDuration + timeSinceLastValue);
             stat.lastMean = newMean;
             stat.lastMeanDuration += timeSinceLastValue;
             stat.lastValueTime = now;
 
-            if (lastMeanDuration >= 60000) {
+            if (stat.lastMeanDuration >= 60000) {
               // if the mean duration is greater than 60 seconds, send the mean value to MQTT
               publishValue(newMean);
               stat.lastMeanDuration = 0;
