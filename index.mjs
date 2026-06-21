@@ -141,10 +141,11 @@ async function start() {
         console.log(device.id, prop, "changed from", oldValue, "to", newValue);
 
         const publishValue = (val) => {
+          const formattedVal = typeof val === 'number' ? Number(val.toFixed(1)) : val;
           client
             .publishAsync(
               `${getDeviceTopicPrefix(device)}/${prop}`,
-              JSON.stringify(val),
+              JSON.stringify(formattedVal),
               {
                 qos: 0,
                 retain: true,
