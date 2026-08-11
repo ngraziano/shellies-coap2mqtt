@@ -12,6 +12,7 @@ const gatewayid = "shellies-coap2mqtt";
  *
  * @param {{id:string, type:string, host: string}} device device
  * @param {string} mac mac address of the device
+ * @returns {{identifiers: string[], manufacturer: string, model: string, name: string, connections: [string, string][], configuration_url: string, via_device: string}} home assistant device object
  */
 function getHomeAssistantDevice(device, mac) {
   // split device id in 6 parts of 2 chars
@@ -44,6 +45,12 @@ async function getDeviceMac(device) {
   return res.body.mac;
 }
 
+/**
+ * 
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} homeassistantprefix topic prefix for home assistant discovery
+ * @param {string} deviceprefix device topic prefix
+ */
 async function addGatewayToHomeAssistantDiscover(
   client,
   homeassistantprefix,
@@ -82,10 +89,10 @@ async function addGatewayToHomeAssistantDiscover(
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {{id:string, type:string}} device
- * @param {string} homeassistantprefix
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {{id:string, type:string}} device device info
+ * @param {string} homeassistantprefix topic prefix for home assistant discovery
+ * @param {string} deviceprefix device topic prefix
  */
 async function addToHomeAssistantDiscover(
   client,
@@ -155,11 +162,12 @@ async function addToHomeAssistantDiscover(
 }
 
 /**
- *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * Adds a relay switch to Home Assistant
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addRelay0(client, prefix, device, deviceprefix, mac) {
   client.publish(
@@ -185,10 +193,11 @@ function addRelay0(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addInput0(client, prefix, device, deviceprefix, mac) {
   client.publish(
@@ -213,10 +222,11 @@ function addInput0(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addPower0(client, prefix, device, deviceprefix, mac) {
   client.publish(
@@ -241,33 +251,14 @@ function addPower0(client, prefix, device, deviceprefix, mac) {
 }
 
 /**
- *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * Adds energy counter sensor to Home Assistant
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addEnergyCounter0(client, prefix, device, deviceprefix, mac) {
-  client.publish(
-    prefix + `sensor/shellies/${device.id}-energy/config`,
-    JSON.stringify({
-      name: `SH-${device.id}-energy`,
-      state_topic: `${deviceprefix}/energyCounter0`,
-      availability_topic: `${deviceprefix}/state`,
-      payload_available,
-      payload_not_available,
-      unit_of_measurement: "Wmin",
-      device: getHomeAssistantDevice(device, mac),
-      device_class: "energy",
-      state_class: "total_increasing",
-      unique_id: `SH-${device.id}-energy`,
-    }),
-    {
-      retain: true,
-      qos: 0,
-    }
-  );
-
   // energie in Wh
   client.publish(
     prefix + `sensor/shellies/${device.id}-energy-wh/config`,
@@ -291,11 +282,12 @@ function addEnergyCounter0(client, prefix, device, deviceprefix, mac) {
 }
 
 /**
- *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * Adds over power value sensor to Home Assistant
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addoverPowerValue(client, prefix, device, deviceprefix, mac) {
   addCaractheristic(
@@ -312,10 +304,11 @@ function addoverPowerValue(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addInternalTemp(client, prefix, device, deviceprefix, mac) {
   addCaractheristic(
@@ -332,10 +325,11 @@ function addInternalTemp(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addTemperature(client, prefix, device, deviceprefix, mac) {
   addCaractheristic(
@@ -352,10 +346,11 @@ function addTemperature(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addTargetTemperature(client, prefix, device, deviceprefix, mac) {
   addCaractheristic(
@@ -372,10 +367,11 @@ function addTargetTemperature(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addBattery(client, prefix, device, deviceprefix, mac) {
   addCaractheristic(
@@ -392,10 +388,11 @@ function addBattery(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addMode(client, prefix, device, deviceprefix, mac) {
   addCaractheristic(
@@ -412,10 +409,11 @@ function addMode(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addValvePosition(client, prefix, device, deviceprefix, mac) {
   addCaractheristic(
@@ -432,10 +430,11 @@ function addValvePosition(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addOverheated(client, prefix, device, deviceprefix, mac) {
   addBinaryCaractheristic(
@@ -451,10 +450,11 @@ function addOverheated(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
  */
 function addoverPower(client, prefix, device, deviceprefix, mac) {
   addBinaryCaractheristic(
@@ -470,12 +470,13 @@ function addoverPower(client, prefix, device, deviceprefix, mac) {
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
- * @param {string} characteristic
- * @param {string} deviceClass
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
+ * @param {string} characteristic characteristic name
+ * @param {string} deviceClass home assistant device class
  */
 function addBinaryCaractheristic(
   client,
@@ -509,13 +510,14 @@ function addBinaryCaractheristic(
 
 /**
  *
- * @param {import("mqtt").MqttClient} client
- * @param {string} prefix
- * @param {{id:string, type:string}} device
- * @param {string} deviceprefix
- * @param {string} characteristic
- * @param {string} unit
- * @param {string} deviceClass
+ * @param {import("mqtt").MqttClient} client mqtt client
+ * @param {string} prefix topic prefix for home assistant discovery
+ * @param {{id:string, type:string}} device device info
+ * @param {string} deviceprefix device topic prefix
+ * @param {string} mac mac address of the device
+ * @param {string} characteristic characteristic name
+ * @param {string} unit unit of measurement
+ * @param {string} deviceClass home assistant device class
  */
 function addCaractheristic(
   client,

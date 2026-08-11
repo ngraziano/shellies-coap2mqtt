@@ -27,7 +27,8 @@ const args = commandLineArgs(optionDefinitions);
 
 /**
  *
- * @param {{id:string, type:string}} device
+ * @param {{id:string, type:string}} device Device details
+ * @returns {string} device topic prefix
  */
 function getDeviceTopicPrefix(device) {
   return `${args.mqttprefix}/${device.type}/${device.id}`;
@@ -35,8 +36,8 @@ function getDeviceTopicPrefix(device) {
 
 /**
  *
- * @param {string[]} topics
- * @param {Buffer} payload
+ * @param {string[]} topics Mqtt topic split in parts
+ * @param {Buffer} payload Mqtt payload to parse
  */
 async function handleSet([deviceType, deviceID, prop], payload) {
   const device = shellies.getDevice(deviceType, deviceID);
@@ -54,8 +55,8 @@ async function handleSet([deviceType, deviceID, prop], payload) {
 
 /**
  *
- * @param {string} topic
- * @param {Buffer} payload
+ * @param {string} topic Mqtt topic
+ * @param {Buffer} payload Mqtt payload
  */
 function handleMqttMessage(topic, payload) {
   const setTopics = mqttWildcard(topic, `${args.mqttprefix}/+/+/+/SET`);
@@ -64,6 +65,9 @@ function handleMqttMessage(topic, payload) {
   }
 }
 
+/**
+ * Start of the application
+ */
 async function start() {
   const client = await connectAsync(args.mqtturl, {
     connectTimeout: 10000,
@@ -134,7 +138,10 @@ async function start() {
     device.on(
       "change",
       /**
-       * @param {string} prop
+       * @param {string} prop property name that changed
+       * @param {number|string} newValue new value of the property
+       * @param {number|string} oldValue old value of the property
+       * @param {import("shellies").Device} device device that emitted the change
        */
       (prop, newValue, oldValue, device) => {
         // a property on the device has changed
@@ -266,6 +273,11 @@ async function start() {
   console.log("Start listening shellies");
 }
 
+/**
+ * Simple delay
+ * @param {number} ms delay in milliseconds
+ * @returns {Promise<void>} Promise that resolves after the delay
+ */
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
